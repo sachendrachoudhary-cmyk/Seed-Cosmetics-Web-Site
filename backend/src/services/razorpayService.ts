@@ -1,4 +1,4 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
 import Razorpay from "razorpay";
 
 export interface ICreateRazorpayOrderOptions {
@@ -23,6 +23,8 @@ export class RazorpayService {
   }
 
   public static isMockMode(): boolean {
+    // Never allow simulated payments in production, even if keys are missing.
+    if (process.env.NODE_ENV === "production") return false;
     const key = this.getKeyId();
     return !key || key.includes("mock") || key === "rzp_test_SeedCosmeticsKey123";
   }
@@ -89,10 +91,10 @@ export class RazorpayService {
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest("hex");
 
-    return crypto.timingSafeEqual(
-      Buffer.from(expectedSignature, "utf8"),
-      Buffer.from(razorpaySignature, "utf8")
-    );
+    const expected = Buffer.from(expectedSignature, "utf8");
+    const received = Buffer.from(razorpaySignature || "", "utf8");
+    if (expected.length !== received.length) return false;
+    return crypto.timingSafeEqual(expected, received);
   }
 
   public static verifyWebhookSignature(rawBody: string, signature: string): boolean {
