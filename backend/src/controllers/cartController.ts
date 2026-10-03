@@ -1,13 +1,15 @@
-﻿import { Request, Response } from "express";
+import { Request, Response } from "express";
 import { Cart, ICart } from "../models/Cart";
 import { Product } from "../models/Product";
 import { Variant } from "../models/Variant";
 import { Coupon } from "../models/Coupon";
 import { PricingEngine } from "../services/pricingEngine";
 import { AuthenticatedRequest } from "../middlewares/auth";
+import { isFirstOrder } from "../services/couponEligibility";
 
 export class CartController {
   private static async recalculateCart(cart: ICart): Promise<ICart> {
+    const firstOrder = await isFirstOrder({ userId: cart.user });
     const validItems: any[] = [];
 
     for (const item of cart.items) {
@@ -52,7 +54,8 @@ export class CartController {
 
     const pricing = PricingEngine.calculateCartTotals(
       validItems.map((i) => ({ unitPrice: i.unitPrice, quantity: i.quantity })),
-      coupon
+      coupon,
+      firstOrder
     );
 
     cart.subtotal = pricing.subtotal;
@@ -293,6 +296,17 @@ export class CartController {
 
       cart.couponCode = coupon.code;
       await CartController.recalculateCart(cart);
+
+      if (cart.couponDiscount <= 0 && !coupon.freeShipping) {
+        cart.couponCode = undefined;
+        await CartController.recalculateCart(cart);
+        return res.status(400).json({
+          success: false,
+          message: coupon.firstOrderOnly
+            ? `${coupon.code} is valid on your first order only.`
+            : `${coupon.code} is not applicable to this cart.`,
+        });
+      }
       await cart.populate("items.product", "name slug thumbnail images stock sellingPrice MRP");
 
       return res.json({

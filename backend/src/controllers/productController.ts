@@ -1,10 +1,12 @@
-﻿import { Request, Response } from "express";
+import { Request, Response } from "express";
 import { Product } from "../models/Product";
 import { Variant } from "../models/Variant";
 import { Category } from "../models/Category";
 import { Review } from "../models/Review";
 import { SeoService } from "../services/seoService";
 import { AuthenticatedRequest } from "../middlewares/auth";
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export class ProductController {
   public static async getProducts(req: Request, res: Response) {
@@ -20,12 +22,24 @@ export class ProductController {
         page = "1",
         limit = "12",
         status = "published",
+        search,
       } = req.query;
 
       const filter: any = {};
 
       if (status) {
         filter.status = status;
+      }
+
+      if (search && String(search).trim()) {
+        const rx = new RegExp(escapeRegex(String(search).trim()), "i");
+        filter.$or = [
+          { name: rx },
+          { sku: rx },
+          { shortDescription: rx },
+          { "ingredients.name": rx },
+          { skinConcern: rx },
+        ];
       }
 
       if (category) {
@@ -181,7 +195,7 @@ export class ProductController {
         return res.json({ success: true, products: [], suggestions: [], categories: [] });
       }
 
-      const regex = new RegExp(q, "i");
+      const regex = new RegExp(escapeRegex(q), "i");
 
       const [products, categories] = await Promise.all([
         Product.find({

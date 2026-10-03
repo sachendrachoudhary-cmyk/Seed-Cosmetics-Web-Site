@@ -9,6 +9,7 @@ import { PricingEngine } from "../services/pricingEngine";
 import { RazorpayService } from "../services/razorpayService";
 import { InventoryService } from "../services/inventoryService";
 import { AuthenticatedRequest } from "../middlewares/auth";
+import { isFirstOrder } from "../services/couponEligibility";
 
 export class CheckoutController {
   public static async validateCheckout(req: AuthenticatedRequest, res: Response) {
@@ -37,9 +38,11 @@ export class CheckoutController {
         coupon = await Coupon.findOne({ code: cart.couponCode, isActive: true });
       }
 
+      const firstOrder = await isFirstOrder({ userId: req.user?._id, email: req.user?.email || req.body.customerEmail });
       const pricing = PricingEngine.calculateCartTotals(
         cart.items.map((i) => ({ unitPrice: i.unitPrice, quantity: i.quantity })),
-        coupon
+        coupon,
+        firstOrder
       );
 
       return res.json({
@@ -122,9 +125,11 @@ export class CheckoutController {
         });
       }
 
+      const firstOrder = await isFirstOrder({ userId: req.user?._id, email });
       const pricing = PricingEngine.calculateCartTotals(
         orderItems.map((i) => ({ unitPrice: i.price, quantity: i.quantity })),
-        coupon
+        coupon,
+        firstOrder
       );
 
       const orderNumber = `SC-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
