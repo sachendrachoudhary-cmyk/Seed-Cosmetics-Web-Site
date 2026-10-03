@@ -1,0 +1,1 @@
+const fs = require("fs"); const p = process.argv[2]; let b = ""; process.stdin.setEncoding("utf8"); process.stdin.on("data", c => b += c); process.stdin.on("end", () => { fs.mkdirSync(require("path").dirname(p), { recursive: true }); fs.writeFileSync(p, Buffer.from(b.trim(), "base64").toString("utf8"), "utf8"); console.log("Wrote " + p); });

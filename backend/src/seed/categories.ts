@@ -1,0 +1,42 @@
+﻿export const categoriesData = [
+  {
+    name: "Face Care",
+    slug: "face-care",
+    description: "Nourishing, barrier-restoring botanical facial treatments designed for resilient, healthy skin.",
+    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80",
+    featured: true,
+    order: 1,
+  },
+  {
+    name: "Serums & Treatments",
+    slug: "serums-treatments",
+    description: "High-potency botanical active serums formulated to target hyperpigmentation, fine lines, and texture.",
+    image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+    featured: true,
+    order: 2,
+  },
+  {
+    name: "Toners & Mists",
+    slug: "toners-mists",
+    description: "Alcohol-free floral hydrosols and balancing essences to quench thirst and balance skin pH.",
+    image: "https://images.unsplash.com/photo-1608248597359-59754f923297?auto=format&fit=crop&w=800&q=80",
+    featured: true,
+    order: 3,
+  },
+  {
+    name: "Hair Care Rituals",
+    slug: "hair-care",
+    description: "Root-strengthening scalp oils, herbal rinses, and nourishing conditioners infused with Ayurvedic herbs.",
+    image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+    featured: true,
+    order: 4,
+  },
+  {
+    name: "Body & Bath",
+    slug: "body-bath",
+    description: "Cold-pressed plant butters and gentle herbal washes for velvety, hydrated body skin.",
+    image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+    featured: true,
+    order: 5,
+  },
+];
