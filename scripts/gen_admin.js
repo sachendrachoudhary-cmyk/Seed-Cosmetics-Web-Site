@@ -56,6 +56,7 @@ export default function AdminPage() {
   const [inventoryLogs, setInventoryLogs] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [seoReport, setSeoReport] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -64,7 +65,7 @@ export default function AdminPage() {
   const [newProd, setNewProd] = useState({
     name: "",
     sku: "",
-    category: "Skin",
+    category: "",
     shortDescription: "",
     description: "",
     bulletPoints: ["100% Cold-Pressed Seed Extraction", "Zero Petroleum or Mineral Oils"],
@@ -133,9 +134,16 @@ export default function AdminPage() {
   // Load Products
   const loadProducts = async () => {
     try {
-      const res = await fetchApi<{ success: boolean; products: any[] }>("/products?limit=50");
+      const [res, catRes] = await Promise.all([
+        fetchApi<{ success: boolean; products: any[] }>("/products?limit=50"),
+        fetchApi<{ success: boolean; categories: any[] }>("/content/categories"),
+      ]);
       if (res.success) {
         setProducts(res.products);
+      }
+      if (catRes.success) {
+        setCategories(catRes.categories);
+        setNewProd((prev) => (prev.category ? prev : { ...prev, category: catRes.categories[0]?._id || "" }));
       }
     } catch (err: any) {
       console.error("Products error:", err);
@@ -224,7 +232,13 @@ export default function AdminPage() {
         method: "POST",
         body: JSON.stringify({
           ...newProd,
-          ingredients: newProd.ingredients.split(",").map((s) => s.trim()),
+          description: newProd.description || newProd.shortDescription,
+          ingredients: newProd.ingredients
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((name) => ({ name })),
+          images: [{ url: newProd.thumbnail, alt: newProd.name, isPrimary: true }],
         }),
       });
       if (res.success) {
@@ -1119,13 +1133,16 @@ export default function AdminPage() {
                 <div>
                   <label className="block font-semibold text-charcoal mb-1">Category</label>
                   <select
+                    required
                     value={newProd.category}
                     onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-cream-border outline-none bg-white"
                   >
-                    <option value="Skin">Skin</option>
-                    <option value="Hair">Hair</option>
-                    <option value="Body">Body</option>
+                    {categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
